@@ -1,51 +1,97 @@
+import type { Metadata } from "next";
 import Image from "next/image";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Footer } from "@/components/Footer";
 import { ButtonLink } from "@/components/ButtonLink";
-import { aureliaCopy, sampleChapters } from "@/lib/content";
+import { aureliaCopy, styleGallery } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Sample Books — PageCub Personalized Illustrated Children's Storybooks",
+  description: "See real chapters and illustrations from completed PageCub books in multiple illustration styles.",
+};
 
 export default function SamplesPage() {
   return (
-    <main className="page-shell py-14">
-      <div className="max-w-3xl">
-        <p className="font-bold text-sage">Sample book</p>
-        <h1 className="display mt-3 text-5xl font-bold">Aurelia and the Moonlight Kingdom</h1>
-        <p className="mt-5 text-lg leading-8 text-ink/72">{aureliaCopy}</p>
-      </div>
-      <div className="mt-10 flex flex-wrap gap-3">
-        {sampleChapters.map((chapter) => (
-          <a key={chapter.number} href={`#chapter-${chapter.number}`} className="rounded-full border border-line bg-card px-4 py-2 text-sm font-bold">
-            Chapter {chapter.number}: {chapter.title}
-          </a>
-        ))}
-      </div>
-      <div className="mt-12 grid gap-12">
-        {sampleChapters.map((chapter) => (
-          <section key={chapter.number} id={`chapter-${chapter.number}`} className="rounded-[2rem] border border-line bg-card p-4 shadow-soft md:p-7">
-            <div className="mb-6">
-              <p className="text-sm font-bold text-sage">Chapter {chapter.number}</p>
-              <h2 className="display mt-1 text-3xl font-bold">{chapter.title}</h2>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-ink/70">{chapter.summary}</p>
-            </div>
-            <div className="grid gap-5">
-              {chapter.pages.map((page, index) => (
-                <article key={index} className="grid overflow-hidden rounded-2xl border border-line md:grid-cols-2">
-                  <div className="book-paper p-6 md:p-8">
-                    <p className="mb-4 text-sm font-bold text-ink/55">Page {index + 1}</p>
-                    <p className="whitespace-pre-line text-[15px] leading-7 text-ink/78">{page.text}</p>
+    <>
+      <SiteHeader />
+      <main>
+        <section className="page-shell py-16">
+          <p className="font-bold text-sage text-sm uppercase tracking-widest mb-4">Samples</p>
+          <h1 className="display text-5xl font-bold mb-4">What a finished book looks like.</h1>
+          <p className="text-ink/65 text-lg leading-8 max-w-xl">
+            Real chapters and illustrations from completed PageCub books — two different illustration styles, same character, two different stories.
+          </p>
+        </section>
+
+        {styleGallery.map((styleRun, styleIdx) => (
+          <section
+            key={styleRun.style}
+            className={`py-16 ${styleIdx % 2 === 1 ? "bg-sage/8" : ""}`}
+          >
+            <div className="page-shell">
+              <div className="flex flex-wrap items-center gap-4 mb-10">
+                <div>
+                  <span className="inline-block rounded-full border border-honey/50 bg-honey/10 px-4 py-1.5 text-xs font-bold text-honey mb-2">
+                    Style: {styleRun.style}
+                  </span>
+                  <h2 className="display text-3xl font-bold">{styleRun.story}</h2>
+                  <p className="text-ink/55 text-sm mt-1">Character: {styleRun.character}</p>
+                </div>
+              </div>
+
+              <div className="space-y-12">
+                {styleRun.chapters.map((chapter) => (
+                  <div key={chapter.number} className="rounded-[2rem] border border-line bg-card overflow-hidden">
+                    <div className="px-7 py-5 border-b border-line">
+                      <p className="text-xs font-bold uppercase tracking-widest text-sage mb-1">Chapter {chapter.number}</p>
+                      <h3 className="display text-2xl font-bold">{chapter.title}</h3>
+                      {chapter.summary && (
+                        <p className="text-sm text-ink/50 mt-1 italic">{chapter.summary}</p>
+                      )}
+                    </div>
+                    {chapter.pages.map((page, pageIdx) => (
+                      <div
+                        key={pageIdx}
+                        className={`grid md:grid-cols-2 ${pageIdx % 2 === 1 ? "md:[direction:rtl]" : ""}`}
+                      >
+                        <div className={`p-7 flex items-center ${pageIdx % 2 === 1 ? "md:[direction:ltr]" : ""}`}>
+                          <p className="text-sm leading-8 text-ink/80 whitespace-pre-line">{page.text}</p>
+                        </div>
+                        <div className={pageIdx % 2 === 1 ? "md:[direction:ltr]" : ""}>
+                          <Image
+                            src={page.image}
+                            alt={`${chapter.title} — illustration ${pageIdx + 1}`}
+                            width={720}
+                            height={720}
+                            className="aspect-square w-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <Image src={page.image} alt={`${chapter.title} illustration page ${index + 1}`} width={720} height={720} className="h-full min-h-80 w-full object-cover" />
-                </article>
-              ))}
+                ))}
+              </div>
             </div>
           </section>
         ))}
-      </div>
-      <div className="mt-12 rounded-[2rem] bg-sage/18 p-8 text-center">
-        <h2 className="display text-3xl font-bold">Make a book around your child</h2>
-        <p className="mx-auto mt-3 max-w-xl text-ink/70">Choose the world, the lesson, the people, and the tiny details that make it feel like home.</p>
-        <div className="mt-7">
+
+        <section className="border-t border-line bg-card/70 py-16">
+          <div className="page-shell grid gap-8 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <h2 className="display text-3xl font-bold mb-4">About Aurelia</h2>
+              <p className="text-lg leading-9 text-ink/72 max-w-2xl">{aureliaCopy}</p>
+            </div>
+            <ButtonLink href="/create">Start a Book</ButtonLink>
+          </div>
+        </section>
+
+        <section className="page-shell py-16 text-center">
+          <h2 className="display text-3xl font-bold mb-3">Ready to make one for your child?</h2>
+          <p className="text-ink/60 mb-8">Any illustration style. Any character. Any story.</p>
           <ButtonLink href="/create">Start a Book</ButtonLink>
-        </div>
-      </div>
-    </main>
+        </section>
+      </main>
+      <Footer />
+    </>
   );
 }
