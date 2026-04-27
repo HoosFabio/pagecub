@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Footer } from "@/components/Footer";
 import { ButtonLink } from "@/components/ButtonLink";
 import { ShieldCheck, Lock, EyeOff, HeartHandshake } from "lucide-react";
 
@@ -12,7 +10,6 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <SiteHeader />
       <main>
         <section className="page-shell py-24">
           <div className="max-w-2xl">
@@ -98,7 +95,6 @@ export default function AboutPage() {
           <ButtonLink href="/create">Start a Book</ButtonLink>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

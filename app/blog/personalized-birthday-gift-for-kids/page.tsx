@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Footer } from "@/components/Footer";
 import { ButtonLink } from "@/components/ButtonLink";
 
 export const metadata: Metadata = {
@@ -11,7 +9,6 @@ export const metadata: Metadata = {
 export default function BlogPost() {
   return (
     <>
-      <SiteHeader />
       <main className="page-shell py-16 max-w-2xl">
         <p className="text-sm font-bold text-sage uppercase tracking-widest mb-4">PageCub Blog</p>
         <h1 className="display text-4xl font-bold leading-tight mb-4">Why a Custom Storybook Is the Most Meaningful Birthday Gift for a Child</h1>
@@ -70,7 +67,6 @@ export default function BlogPost() {
           <ButtonLink href="/create">Start a Book</ButtonLink>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

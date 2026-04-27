@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Footer } from "@/components/Footer";
 import { ButtonLink } from "@/components/ButtonLink";
 import { howSteps } from "@/lib/content";
 
@@ -12,7 +10,6 @@ export const metadata: Metadata = {
 export default function HowItWorksPage() {
   return (
     <>
-      <SiteHeader />
       <main className="page-shell py-14">
         <p className="font-bold text-sage">How it works</p>
         <h1 className="display mt-3 max-w-3xl text-5xl font-bold">From a few details to a finished keepsake.</h1>
@@ -67,7 +64,6 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — PageCub",
@@ -10,7 +8,6 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <>
-      <SiteHeader />
       <main className="page-shell py-24 max-w-3xl">
         <p className="text-sm font-bold uppercase tracking-widest text-sage mb-3">Legal</p>
         <h1 className="display text-4xl font-bold mb-2">Privacy Policy</h1>
@@ -102,7 +99,6 @@ export default function PrivacyPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

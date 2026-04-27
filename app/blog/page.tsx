@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SiteHeader } from "@/components/SiteHeader";
-import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "PageCub Blog — Personalized Children's Books, Gift Ideas & Parenting Stories",
@@ -26,7 +24,6 @@ const posts = [
 export default function BlogPage() {
   return (
     <>
-      <SiteHeader />
       <main className="page-shell py-16">
         <p className="font-bold text-sage text-sm uppercase tracking-widest mb-4">PageCub Blog</p>
         <h1 className="display text-5xl font-bold mb-3">Stories about stories.</h1>
@@ -43,7 +40,6 @@ export default function BlogPage() {
           ))}
         </div>
       </main>
-      <Footer />
     </>
   );
 }
