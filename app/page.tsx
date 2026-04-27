@@ -11,6 +11,16 @@ const features = [
   "A keepsake made to read, save, and share"
 ];
 
+function UnderConstructionBanner() {
+  return (
+    <div className="w-full bg-honey/20 border-b border-honey/40 py-3 px-4 text-center">
+      <p className="text-sm font-bold text-ink">
+        🚧 PageCub is under active development. Some features are not yet available.
+      </p>
+    </div>
+  );
+}
+
 const useCases = [
   { label: "Birthday gift", Icon: Gift },
   { label: "Bedtime adventure", Icon: Moon },
@@ -24,6 +34,8 @@ export default function HomePage() {
   const preview = sampleChapters[0].pages[0];
 
   return (
+    <>
+    <UnderConstructionBanner />
     <main>
       <section className="page-shell grid min-h-[calc(100vh-5rem)] items-center gap-12 py-16 md:grid-cols-[1fr_0.86fr]">
         <div>
