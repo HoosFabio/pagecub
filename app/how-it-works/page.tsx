@@ -1,29 +1,73 @@
+import type { Metadata } from "next";
+import { SiteHeader } from "@/components/SiteHeader";
+import { Footer } from "@/components/Footer";
 import { ButtonLink } from "@/components/ButtonLink";
 import { howSteps } from "@/lib/content";
 
+export const metadata: Metadata = {
+  title: "How PageCub Works — Personalized Illustrated Children's Storybooks",
+  description: "How PageCub creates a custom 10-chapter illustrated storybook for your child in about 15–20 minutes.",
+};
+
 export default function HowItWorksPage() {
   return (
-    <main className="page-shell py-14">
-      <p className="font-bold text-sage">How it works</p>
-      <h1 className="display mt-3 max-w-3xl text-5xl font-bold">From a few details to a finished keepsake.</h1>
-      <div className="mt-10 grid gap-6">
-        {howSteps.map((step, index) => (
-          <section key={step.title} className="grid gap-5 rounded-[2rem] border border-line bg-card p-7 shadow-sm md:grid-cols-[5rem_1fr]">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-honey/30 text-2xl font-bold">{index + 1}</span>
-            <div>
-              <h2 className="display text-3xl font-bold">{step.title}</h2>
-              <p className="mt-3 max-w-3xl leading-7 text-ink/72">{step.text}</p>
-            </div>
-          </section>
-        ))}
-      </div>
-      <div className="mt-10 rounded-[2rem] bg-ink p-8 text-white">
-        <h2 className="display text-3xl font-bold">Ready when you are.</h2>
-        <p className="mt-3 text-white/75">The create form walks you through each choice gently.</p>
-        <div className="mt-6">
-          <ButtonLink href="/create">Start a Book</ButtonLink>
+    <>
+      <SiteHeader />
+      <main className="page-shell py-14">
+        <p className="font-bold text-sage">How it works</p>
+        <h1 className="display mt-3 max-w-3xl text-5xl font-bold">From a few details to a finished keepsake.</h1>
+        <p className="mt-5 max-w-2xl text-lg text-ink/70 leading-8">
+          PageCub is a personalized illustrated storybook service. You describe your child — who they are, what they love, what they&apos;re working through — and we create a complete 10-chapter illustrated book around them, delivered as a PDF in about 15–20 minutes.
+        </p>
+        <div className="mt-10 grid gap-6">
+          {howSteps.map((step, index) => (
+            <section key={step.title} className="grid gap-5 rounded-[2rem] border border-line bg-card p-7 shadow-sm md:grid-cols-[5rem_1fr]">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-honey/30 text-2xl font-bold">{index + 1}</span>
+              <div>
+                <h2 className="display text-3xl font-bold">{step.title}</h2>
+                <p className="mt-3 max-w-3xl leading-7 text-ink/72">{step.text}</p>
+              </div>
+            </section>
+          ))}
         </div>
-      </div>
-    </main>
+
+        <div className="mt-10 rounded-[2rem] border border-line bg-card p-8">
+          <h2 className="display text-2xl font-bold mb-4">What&apos;s inside every book</h2>
+          <div className="grid gap-3 sm:grid-cols-2 text-sm text-ink/70 leading-7">
+            {[
+              "10 chapters, each with 2 text pages and 2 illustrations",
+              "20 custom illustrations in the style you choose",
+              "Title page and cover",
+              "Dedication page",
+              "Opening note page",
+              "Back matter: what the hero learned, follow-up conversation questions, draw-along prompt",
+              "Delivered as a high-quality PDF",
+              "Print fulfillment coming soon — easy hardcover ordering, approximately 48 pages",
+            ].map((item) => (
+              <div key={item} className="flex items-start gap-3">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-honey flex-shrink-0" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-[2rem] border border-line bg-card p-8">
+          <h2 className="display text-2xl font-bold mb-3">Any illustration style you want</h2>
+          <p className="text-ink/70 text-sm leading-7">
+            The creation form lets you choose from warm watercolor, soft painterly, classic children&apos;s book, cute cartoon, whimsical fantasy, gentle woodland, bright colorful modern, minimal simple shapes, or Ghibli-inspired cozy. The style you select is applied consistently across all 20 illustrations in your book.
+          </p>
+        </div>
+
+        <div className="mt-8 rounded-[2rem] bg-ink p-8 text-white">
+          <h2 className="display text-3xl font-bold">Ready when you are.</h2>
+          <p className="mt-3 text-white/75">The create form walks you through each choice gently. About 5 minutes to fill in. About 15–20 minutes to generate.</p>
+          <div className="mt-6">
+            <ButtonLink href="/create">Start a Book</ButtonLink>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

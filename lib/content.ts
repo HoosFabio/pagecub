@@ -23,27 +23,55 @@ export const howSteps = [
 export const faqs = [
   {
     q: "How long does a book take?",
-    a: "Your book is usually ready in about 15-20 minutes. The status page will keep you updated while it is being created."
+    a: "Your book is usually ready in about 15\u201320 minutes. The status page will keep you updated as it\'s being created."
+  },
+  {
+    q: "What does my book actually include?",
+    a: "A complete 10-chapter storybook: 2 text pages and 2 illustrations per chapter (20 illustrations total), plus a title page, dedication page, opening note, and back matter with discussion questions and a draw-along prompt. Delivered as a PDF."
+  },
+  {
+    q: "What illustration styles are available?",
+    a: "You can choose any style in the creation form: warm watercolor, soft painterly, classic children\u2019s book, cute cartoon, whimsical fantasy, gentle woodland, bright colorful modern, minimal simple shapes, or Ghibli-inspired cozy. The style you choose is applied consistently across all 20 illustrations."
+  },
+  {
+    q: "How much does a book cost?",
+    a: "Pricing is set at checkout. There are no subscriptions \u2014 you pay once per book. A price range will be listed here when launch pricing is confirmed."
+  },
+  {
+    q: "What age range is PageCub for?",
+    a: "PageCub stories are written for children roughly ages 3\u201312. You can specify your child\'s age in the creation form and the story length and vocabulary will be shaped accordingly."
   },
   {
     q: "Can I preview the finished book?",
-    a: "Yes. You will be able to preview the finished book before ordering any printed copy."
-  },
-  {
-    q: "Do I need an account?",
-    a: "No account is required. After checkout, you will receive a private status link by email."
-  },
-  {
-    q: "Can I make a book for a niece, nephew, grandchild, or student?",
-    a: "Yes, as long as you are the parent or guardian, or you have permission to create the book."
+    a: "Yes. You can read the full finished book digitally before ordering any printed copy."
   },
   {
     q: "Can I order a physical copy?",
-    a: "Print fulfillment coming soon. For launch, PageCub focuses on the digital book experience."
+    a: "Print fulfillment is coming soon \u2014 hardcover, approximately 48 pages. For now, PageCub delivers a high-quality PDF you can read, share, or print at home."
+  },
+  {
+    q: "Do I need an account?",
+    a: "No account required. After checkout, you receive a private link by email to check your book\'s status and access the finished PDF."
+  },
+  {
+    q: "Is my child\'s information safe?",
+    a: "Yes. Details you provide about your child are used only to create your book. We do not sell, share, or broker that information with any third party. See our Privacy Policy for full details."
+  },
+  {
+    q: "How is the book actually made?",
+    a: "PageCub uses automated creative tools to write and illustrate your book based on the details you provide. No human author or illustrator reviews your specific book before delivery \u2014 it\'s a complete, cohesive output generated from your inputs."
+  },
+  {
+    q: "What if I\'m not happy with the result?",
+    a: "If your book fails to generate due to a technical error on our end, we will refund or regenerate at no charge. Because generation starts immediately after payment and involves significant creative processing, we cannot offer refunds for books that were successfully generated."
+  },
+  {
+    q: "Can I make a book for a grandchild, niece, or nephew?",
+    a: "Yes, as long as you are the parent or guardian, or have explicit permission from the child\'s parent or guardian."
   },
   {
     q: "What information should I include?",
-    a: "The most useful details are warm, everyday ones: personality, interests, appearance, important people, and the feeling you want the story to leave behind."
+    a: "The most useful details are warm and specific: personality quirks, what they love, what they\'re going through, how they look, and the feeling or lesson you want the story to leave behind."
   }
 ];
 

@@ -5,7 +5,8 @@ const links = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/samples", label: "Samples" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/faq", label: "FAQ" }
+  { href: "/faq", label: "FAQ" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function SiteHeader() {
