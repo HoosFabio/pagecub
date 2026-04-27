@@ -17,7 +17,7 @@ export default function PrivacyPage() {
         <p className="text-ink/50 text-sm mb-12">Last Updated: April 27, 2026</p>
 
         <div className="space-y-10 text-sm leading-7 text-ink/75">
-          <p>This Privacy Policy explains how PageCub, an InkSynth product ("PageCub," "we," "us," or "our"), collects, uses, and protects personal information when you use our book creation service at pagecub.com.</p>
+          <p>This Privacy Policy explains how PageCub, an InkSynth product (&quot;PageCub,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), collects, uses, and protects personal information when you use our book creation service at pagecub.com.</p>
 
           <div>
             <h2 className="text-base font-bold text-ink mb-2">1. Information We Collect</h2>
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
 
           <div>
             <h2 className="text-base font-bold text-ink mb-2">2. We Do Not Sell Your Data</h2>
-            <p>PageCub does not sell, rent, broker, or trade your personal information or your child's information to any third party — ever. Your details exist for one purpose: to create your book.</p>
+            <p>PageCub does not sell, rent, broker, or trade your personal information or your child&apos;s information to any third party — ever. Your details exist for one purpose: to create your book.</p>
           </div>
 
           <div>
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-base font-bold text-ink mb-2">5. Your Child's Information</h2>
+            <h2 className="text-base font-bold text-ink mb-2">5. Your Child&apos;s Information</h2>
             <p>Details you provide about your child — name, appearance, personality — are used solely to create the book you ordered. We do not build profiles on children, share their details with third parties, or use them for advertising. PageCub is intended to be used by parents and guardians, not directly by children.</p>
           </div>
 

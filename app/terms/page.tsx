@@ -17,10 +17,10 @@ export default function TermsPage() {
         <p className="text-ink/50 text-sm mb-12">Last Updated: April 27, 2026</p>
 
         <div className="space-y-10 text-sm leading-7 text-ink/75">
-          <p>These Terms of Service ("Terms") govern your access to and use of the websites, services, and book creation tools provided by PageCub, an InkSynth product ("PageCub," "we," "us," or "our"). By using PageCub, you agree to these Terms.</p>
+          <p>These Terms of Service (&quot;Terms&quot;) govern your access to and use of the websites, services, and book creation tools provided by PageCub, an InkSynth product (&quot;PageCub,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By using PageCub, you agree to these Terms.</p>
 
           {[
-            ["1. Eligibility", "You must be at least 18 years old to use PageCub. By submitting a book creation request, you confirm that you are the parent or legal guardian of the child featured in the book, or that you have explicit permission from the child's parent or guardian to do so."],
+            ["1. Eligibility", "You must be at least 18 years old to use PageCub. By submitting a book creation request, you confirm that you are the parent or legal guardian of the child featured in the book, or that you have explicit permission from the child&apos;s parent or guardian to do so."],
             ["2. What PageCub Does", "PageCub uses automated creative tools to generate personalized illustrated storybooks based on the details you provide. The finished book is delivered digitally as a PDF. Print fulfillment is coming soon and will be offered as a separate option when available."],
             ["3. Your Inputs", "You are solely responsible for the information you submit — including your child's name, description, personality, and other details. You represent that all information you provide is accurate, that you have the right to submit it, and that it does not infringe on any third party's rights. Do not submit sensitive personal data beyond what is needed to create the book."],
             ["4. Book Ownership", "Once your book is generated and delivered, you own the finished PDF for personal, non-commercial use. You may print it, share it with family, or keep it for your own use. You may not resell, sublicense, or distribute it commercially."],
