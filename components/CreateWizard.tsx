@@ -48,8 +48,8 @@ const initialForm: FormState = {
 };
 
 const steps = ["Child", "Story", "World", "Personal", "Review"];
-const themes = ["Magical", "Cozy", "Forest", "Space", "Ocean", "Castle", "School", "Dreamy"];
-const styles = ["Bright colorful modern", "Soft watercolor", "Classic storybook", "Cozy bedtime", "Whimsical paper cut"];
+const themes = ["Wonder", "Friendship", "Courage", "Kindness", "Adventure", "Mystery", "Nature", "Family", "Magic", "Growth", "Belonging", "Resilience"];
+const styles = ["Warm watercolor storybook", "Soft painterly", "Classic children's book", "Cute cartoon", "Whimsical fantasy", "Gentle woodland", "Bright colorful modern", "Minimal simple shapes", "Ghibli-inspired cozy"];
 
 export function CreateWizard() {
   const [step, setStep] = useState(0);
