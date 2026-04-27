@@ -27,7 +27,6 @@ const styleGroups = [
     description: "Bold, vibrant, high-energy. Characters that pop off the page.",
     images: [
       { src: "/samples/sample-00.webp", alt: "A girl in a yellow dress points excitedly at a large friendly green dragon, surrounded by colorful mushrooms and a purple and blue dragon" },
-      { src: "/samples/sample-03.webp", alt: "A girl in a yellow dress with a green dragon, purple dragon, and blue dragon in a vivid fantasy mountain landscape" },
       { src: "/samples/sample-06.webp", alt: "A girl with long dark hair kneels on her bedroom floor hugging a small green dragon, stuffed animals and toys all around" },
     ],
   },
