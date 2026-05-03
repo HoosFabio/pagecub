@@ -76,7 +76,7 @@ export default function AboutPage() {
               { Icon: Lock, title: "Private by design", body: "Details you submit about your child are used only to create your book. They are not shared with advertisers, sold to data brokers, or used to build profiles." },
               { Icon: EyeOff, title: "No data selling", body: "We do not sell, rent, or trade your personal information or your child's information to any third party. Full stop." },
               { Icon: ShieldCheck, title: "Made with permission", body: "The creation form requires confirmation that you are the parent, guardian, or have explicit permission to create a book for the child described." },
-              { Icon: HeartHandshake, title: "You can request deletion", body: "If you want your data and your child's details removed from our systems, email support@pagecub.com and we will honor that request." },
+              { Icon: HeartHandshake, title: "You can request deletion", body: "If you want your data and your child's details removed from our systems, email lumen@inksynth.org and we will honor that request." },
             ].map(({ Icon, title, body }) => (
               <div key={title} className="rounded-2xl border border-line bg-card p-6">
                 <Icon className="h-6 w-6 text-sage mb-4" />
@@ -90,7 +90,7 @@ export default function AboutPage() {
         <section className="page-shell pb-16 max-w-2xl">
           <h2 className="display text-3xl font-bold mb-4">Questions?</h2>
           <p className="text-ink/70 leading-7 mb-6">
-            Reach us at <a href="mailto:support@pagecub.com" className="text-honey font-bold hover:underline">support@pagecub.com</a>. We&apos;re happy to answer questions about how the books are made, what data we hold, or anything else before you create.
+            Reach us at <a href="mailto:lumen@inksynth.org" className="text-honey font-bold hover:underline">lumen@inksynth.org</a>. We&apos;re happy to answer questions about how the books are made, what data we hold, or anything else before you create.
           </p>
           <ButtonLink href="/create">Start a Book</ButtonLink>
         </section>

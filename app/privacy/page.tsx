@@ -70,7 +70,7 @@ export default function PrivacyPage() {
 
           <div>
             <h2 className="text-base font-bold text-ink mb-2">6. Data Retention</h2>
-            <p>We retain your order information and book content long enough to support delivery, troubleshoot issues, and maintain billing records. If you would like your data deleted, contact us at support@pagecub.com and we will honor that request.</p>
+            <p>We retain your order information and book content long enough to support delivery, troubleshoot issues, and maintain billing records. If you would like your data deleted, contact us at lumen@inksynth.org and we will honor that request.</p>
           </div>
 
           <div>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
 
           <div>
             <h2 className="text-base font-bold text-ink mb-2">8. Your Rights</h2>
-            <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at support@pagecub.com.</p>
+            <p>You may request access to, correction of, or deletion of your personal information at any time by contacting us at lumen@inksynth.org.</p>
           </div>
 
           <div>
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
             <div className="rounded-2xl border border-line bg-card p-6 space-y-1">
               <p className="font-bold">PageCub / InkSynth</p>
               <p>10220 Old Leo Rd Unit #2027, Fort Wayne, IN 46825</p>
-              <p>support@pagecub.com</p>
+              <p>lumen@inksynth.org</p>
             </div>
           </div>
         </div>

@@ -40,7 +40,7 @@ export default function TermsPage() {
             <div className="rounded-2xl border border-line bg-card p-6 space-y-1">
               <p className="font-bold">PageCub / InkSynth</p>
               <p>10220 Old Leo Rd Unit #2027, Fort Wayne, IN 46825</p>
-              <p>support@pagecub.com</p>
+              <p>lumen@inksynth.org</p>
             </div>
           </div>
         </div>
