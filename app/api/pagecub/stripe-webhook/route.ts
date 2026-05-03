@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     // Fetch order + input payload
     const { data: order, error: orderErr } = await admin
       .from("pagecub_orders")
-      .select("id, email, input_payload, status_token")
+      .select("id, email, input_payload, status_token, status")
       .eq("id", orderId)
       .single();
 

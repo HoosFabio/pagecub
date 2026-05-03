@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const MAX_CHAPTER_RETRIES = 2; // 1 original + 2 retries = 3 total attempts
 
@@ -12,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ sfRunId: string; chapterNum: string }> }
 ) {
   const { sfRunId, chapterNum } = await params;
-  const admin = createAdminClient();
+  const admin = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
   try {
@@ -99,7 +98,7 @@ export async function POST(
 // ─── Failure handler: retry or permanently fail ──────────────────────────────
 
 async function handleChapterFailure(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: any,
   sfRun: SfRun,
   sfRunId: string,
   chapterNum: string,
@@ -136,7 +135,7 @@ async function handleChapterFailure(
 // 10 chapter callbacks arrived simultaneously and overwrote each other's writes.
 
 async function atomicMergeChapter(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: any,
   sfRunId: string,
   chapterNum: string,
   chapterData: ChapterEntry,
@@ -154,7 +153,7 @@ async function atomicMergeChapter(
 }
 
 async function mergeAndCheckCompletion(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: any,
   sfRun: SfRun,
   chapterNum: string,
   chapterData: ChapterEntry,
@@ -291,7 +290,7 @@ async function redispatchChapter(sfRun: SfRun, sfRunId: string, chapterNum: stri
 // ─── Credit refund ────────────────────────────────────────────────────────────
 
 async function refundCredits(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: any,
   toolRunId: string,
   userId: string,
 ) {

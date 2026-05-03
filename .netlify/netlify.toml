@@ -1,24 +1,14 @@
-headersOrigin = "inline"
-redirectsOrigin = "inline"
-
-[images]
-remote_images = ["^(?:https:\\/\\/i\\.mscdn\\.ai(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$"]
-
-[functions]
-
-[functions."*"]
-
-[[plugins]]
-origin = "config"
-package = "@netlify/plugin-nextjs"
-
-[plugins.inputs]
+functionsDirectory = "/data/.openclaw/workspace/tasks/pagecub/netlify/functions"
+functionsDirectoryOrigin = "default"
+headers = []
+redirects = []
 
 [build]
-publish = "/tmp/pagecub/.next"
+publish = "/data/.openclaw/workspace/tasks/pagecub/.next"
 publishOrigin = "config"
 commandOrigin = "config"
 command = "npm run build"
+functions = "/data/.openclaw/workspace/tasks/pagecub/netlify/functions"
 
 [build.environment]
 NEXT_TELEMETRY_DISABLED = "1"
@@ -35,38 +25,12 @@ NEXT_TELEMETRY_DISABLED = "1"
 
 [build.services]
 
-[[headers]]
-for = "/_next/static/*"
+[functions]
 
-[headers.values]
-Cache-Control = "public, max-age=31536000, immutable"
+[functions."*"]
 
-[[redirects]]
-from = "/_next/image"
-to = "/.netlify/images?url=:url&w=:width&q=:quality"
-status = 200.0
-force = false
+[[plugins]]
+origin = "config"
+package = "@netlify/plugin-nextjs"
 
-[redirects.query]
-url = ":url"
-w = ":width"
-q = ":quality"
-
-[redirects.conditions]
-
-[redirects.headers]
-
-[[redirects]]
-from = "/_ipx/*"
-to = "/.netlify/images?url=:url&w=:width&q=:quality"
-status = 200.0
-force = false
-
-[redirects.query]
-url = ":url"
-w = ":width"
-q = ":quality"
-
-[redirects.conditions]
-
-[redirects.headers]
+[plugins.inputs]

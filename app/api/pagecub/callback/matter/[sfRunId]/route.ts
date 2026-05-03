@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const APP_URL = process.env.APP_URL || "https://pagecub.com";
 
@@ -12,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ sfRunId: string }> }
 ) {
   const { sfRunId } = await params;
-  const admin = createAdminClient();
+  const admin = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
   try {

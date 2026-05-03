@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 const MINDSTUDIO_API_KEY       = process.env.MINDSTUDIO_API_KEY!;
 const STORYFORGE_CHAPTER_AGENT_ID = process.env.STORYFORGE_CHAPTER_AGENT_ID!;
@@ -14,7 +13,7 @@ export async function POST(
   { params }: { params: Promise<{ sfRunId: string }> }
 ) {
   const { sfRunId } = await params;
-  const admin = createAdminClient();
+  const admin = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
 
   let body: Record<string, unknown>;
   try {
@@ -178,7 +177,7 @@ export async function POST(
 }
 
 async function refundCredits(
-  admin: ReturnType<typeof createAdminClient>,
+  admin: any,
   toolRunId: string,
   userId: string
 ) {
