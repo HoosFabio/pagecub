@@ -4,6 +4,10 @@
 
 [build.environment]
   NEXT_TELEMETRY_DISABLED = "1"
+  NODE_VERSION = "22"
+
+[functions]
+  node_bundler = "nft"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
