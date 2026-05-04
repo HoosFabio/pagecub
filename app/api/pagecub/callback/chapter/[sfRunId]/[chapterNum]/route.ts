@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 26; // Supabase writes + all-chapters check + matter agent dispatch
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
-import { NextRequest, NextResponse } from "next/server";
 
 const MAX_CHAPTER_RETRIES = 2; // 1 original + 2 retries = 3 total attempts
 

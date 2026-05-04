@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 26; // awaits image optimizer background fn trigger
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
-import { NextRequest, NextResponse } from "next/server";
-
-const APP_URL = process.env.APP_URL || "https://pagecub.com";
+const APP_URL      = process.env.APP_URL || "https://pagecub.com";
 
 export async function POST(
   req: NextRequest,
@@ -140,10 +141,3 @@ async function triggerImageOptimizer(sfRunId: string, bookPayload: Record<string
   }).catch(err => console.warn("[storyforge/matter] image optimizer trigger failed:", err));
 }
 
-function triggerArchiver(toolRunId: string) {
-  fetch(`${APP_URL}/.netlify/functions/storyforge-archive-background`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ toolRunId }),
-  }).catch(err => console.warn("[storyforge] archive trigger failed:", err));
-}

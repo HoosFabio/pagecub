@@ -1,10 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
 import { NextRequest, NextResponse } from "next/server";
 
-const APP_URL          = process.env.APP_URL          || "https://pagecub.com";
+export const maxDuration = 60; // DocRaptor dispatch + background trigger can be slow
+
+const SUPABASE_URL      = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY      = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const APP_URL           = process.env.APP_URL           || "https://pagecub.com";
 const DOCRAPTOR_API_KEY = process.env.DOCRAPTOR_API_KEY!;
 
 // ─── Resolve @@remote_variable@@ pointers from MindStudio Large File Storage ─
