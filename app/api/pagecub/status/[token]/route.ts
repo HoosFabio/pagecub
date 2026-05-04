@@ -9,6 +9,7 @@ const SF_STATUS_TO_STAGE: Record<string, string> = {
   foundation_pending:  "Building the story world",
   chapters_processing: "Writing the chapters",
   matter_pending:      "Creating the illustrations",
+  pdf_pending:         "Assembling your storybook",
   docraptor_pending:   "Assembling your storybook",
   done:                "Ready to view",
   failed:              "Something went wrong",
