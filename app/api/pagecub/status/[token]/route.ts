@@ -6,21 +6,19 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SE
 
 // Maps sf_runs.status → human-readable stage label for the status page
 const SF_STATUS_TO_STAGE: Record<string, string> = {
-  pending:           "Building the story world",
-  generating:        "Building the story world",
-  foundation:        "Writing the chapters",
-  chapters:          "Creating the illustrations",
-  matter:            "Preparing the book pages",
-  docraptor_pending: "Assembling your storybook",
-  done:              "Ready to view",
-  failed:            "failed",
+  foundation_pending:  "Building the story world",
+  chapters_processing: "Writing the chapters",
+  matter_pending:      "Creating the illustrations",
+  docraptor_pending:   "Assembling your storybook",
+  done:                "Ready to view",
+  failed:              "Something went wrong",
 };
 
 export async function GET(
   _req: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
-  const { token } = params;
+  const { token } = await params;
   if (!token) return NextResponse.json({ message: "Invalid token." }, { status: 400 });
 
   const admin = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
