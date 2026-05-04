@@ -13,24 +13,31 @@ type SupportingChar = {
 };
 
 type FormState = {
+  // Step 0 — Child (email captured here)
   email: string;
   charachter_name: string;
   gender: string;
+  gender_custom: string;
   age: string;
   charachter_bio: string;
   charachter_desc: string;
-  world_setting: string;
-  world_setting_custom: string;
-  world_theme: string[];
-  artistic_style: string;
-  time_era: string;
-  time_era_custom: string;
+  // Step 1 — Story
   structure: string;
+  structure_custom: string;
   problem: string;
   moral: string;
   moral_custom: string;
   relevant_struggles: string[];
   struggles_other: string;
+  // Step 2 — World
+  world_setting: string;
+  world_setting_custom: string;
+  world_theme: string[];
+  artistic_style: string;
+  artistic_style_custom: string;
+  time_era: string;
+  time_era_custom: string;
+  // Step 3 — Personal
   book_title: string;
   dedication: string;
   opening_note: string;
@@ -40,18 +47,18 @@ type FormState = {
 const EMPTY_CHAR: SupportingChar = { name: "", role: "", personality: "", appearance: "" };
 
 const INITIAL_FORM: FormState = {
-  email: "", charachter_name: "", gender: "", age: "",
+  email: "", charachter_name: "", gender: "", gender_custom: "", age: "",
   charachter_bio: "", charachter_desc: "",
-  world_setting: "", world_setting_custom: "", world_theme: [],
-  artistic_style: "", time_era: "", time_era_custom: "",
-  structure: "", problem: "", moral: "", moral_custom: "",
+  structure: "", structure_custom: "", problem: "", moral: "", moral_custom: "",
   relevant_struggles: [], struggles_other: "",
+  world_setting: "", world_setting_custom: "", world_theme: [],
+  artistic_style: "", artistic_style_custom: "", time_era: "", time_era_custom: "",
   book_title: "", dedication: "", opening_note: "", colophon: "",
 };
 
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 
-const GENDER_OPTIONS    = ["Boy", "Girl", "Nonbinary", "Unspecified / surprise me"];
+const GENDER_OPTIONS    = ["Boy", "Girl", "Nonbinary", "Unspecified / surprise me", "Other"];
 const AGE_OPTIONS       = ["3","4","5","6","7","8","9","10","11","12"];
 const WORLD_THEMES      = ["Wonder","Friendship","Courage","Kindness","Adventure","Mystery","Nature","Family","Magic","Growth","Belonging","Resilience"];
 const STRUGGLE_OPTIONS  = ["Anxiety","Shyness","Starting school","Making friends","Fear of trying new things","Sibling jealousy","Bedtime fears","Grief / change","Big feelings","Confidence","Other"];
@@ -67,6 +74,7 @@ const STRUCTURE_OPTIONS = [
   "Needs vs frustration",
   "Episodic adventure",
   "Bedtime / soothing arc",
+  "Other",
 ];
 
 const WORLD_SETTING_OPTIONS = [
@@ -89,9 +97,10 @@ const STYLE_OPTIONS = [
   "Bright colorful modern",
   "Minimal simple shapes",
   "Ghibli-inspired cozy",
+  "Other — describe your own",
 ];
 
-// Full descriptive expansions sent to the AI — same as inksynth.org
+// Full descriptive expansions sent to the AI
 const STYLE_EXPANSIONS: Record<string, string> = {
   "Warm watercolor storybook":
     "Warm watercolor storybook illustration: soft brushwork textures, warm golden and amber lighting, gentle translucent color washes, expressive rounded character forms, rich layered backgrounds with visible paint texture, cozy and inviting atmosphere. Consistent palette and brushwork across every spread.",
@@ -118,12 +127,12 @@ const STYLE_EXPANSIONS: Record<string, string> = {
 const steps = ["Child", "Story", "World", "Personal", "Review"];
 
 export function CreateWizard() {
-  const [step, setStep]                   = useState(0);
-  const [form, setForm]                   = useState<FormState>(INITIAL_FORM);
+  const [step, setStep]                       = useState(0);
+  const [form, setForm]                       = useState<FormState>(INITIAL_FORM);
   const [supportingChars, setSupportingChars] = useState<SupportingChar[]>([{ ...EMPTY_CHAR }]);
-  const [permission, setPermission]       = useState(false);
-  const [submitting, setSubmitting]       = useState(false);
-  const [error, setError]                 = useState("");
+  const [permission, setPermission]           = useState(false);
+  const [submitting, setSubmitting]           = useState(false);
+  const [error, setError]                     = useState("");
 
   const progress = useMemo(() => ((step + 1) / steps.length) * 100, [step]);
 
@@ -153,27 +162,25 @@ export function CreateWizard() {
     setSupportingChars(cs => cs.map((c, idx) => idx === i ? { ...c, [key]: val } : c));
   }
 
-  function addChar()      { setSupportingChars(cs => [...cs, { ...EMPTY_CHAR }]); }
+  function addChar()         { setSupportingChars(cs => [...cs, { ...EMPTY_CHAR }]); }
   function removeChar(i: number) { setSupportingChars(cs => cs.filter((_, idx) => idx !== i)); }
 
-  // Serialize supporting chars to string for the API
   function buildSupportingChars(): string {
     return supportingChars
       .filter(c => c.name.trim())
-      .map(c => [
-        c.name,
-        c.role       ? `(${c.role})`       : "",
-        c.personality,
-        c.appearance,
-      ].filter(Boolean).join(" — "))
+      .map(c => [c.name, c.role ? `(${c.role})` : "", c.personality, c.appearance].filter(Boolean).join(" — "))
       .join("\n");
   }
 
+  function buildGender()        { return form.gender === "Other" ? form.gender_custom : form.gender; }
   function buildWorldSetting()  { return form.world_setting  === "Other" ? form.world_setting_custom  : form.world_setting;  }
-  function buildTimeEra()       { return form.time_era        === "Other" ? form.time_era_custom        : form.time_era;        }
-  function buildMoral()         { return form.moral           === "Other" ? form.moral_custom           : form.moral;           }
-  function buildArtisticStyle() { return STYLE_EXPANSIONS[form.artistic_style] ?? form.artistic_style; }
-
+  function buildTimeEra()       { return form.time_era       === "Other" ? form.time_era_custom       : form.time_era;       }
+  function buildMoral()         { return form.moral          === "Other" ? form.moral_custom          : form.moral;          }
+  function buildStructure()     { return form.structure      === "Other" ? form.structure_custom      : form.structure;      }
+  function buildArtisticStyle() {
+    if (form.artistic_style === "Other — describe your own") return form.artistic_style_custom;
+    return STYLE_EXPANSIONS[form.artistic_style] ?? form.artistic_style;
+  }
   function buildStruggles(): string {
     const base = form.relevant_struggles.filter(s => s !== "Other");
     if (form.relevant_struggles.includes("Other") && form.struggles_other.trim()) {
@@ -193,7 +200,7 @@ export function CreateWizard() {
       const payload = {
         email:                  form.email,
         charachter_name:        form.charachter_name,
-        gender:                 form.gender,
+        gender:                 buildGender(),
         age:                    form.age,
         charachter_bio:         form.charachter_bio,
         charachter_desc:        form.charachter_desc,
@@ -202,7 +209,7 @@ export function CreateWizard() {
         world_theme:            form.world_theme,
         artistic_style:         buildArtisticStyle(),
         time_era:               buildTimeEra(),
-        structure:              form.structure,
+        structure:              buildStructure(),
         problem:                form.problem,
         moral:                  buildMoral(),
         relevant_struggles:     buildStruggles(),
@@ -234,7 +241,14 @@ export function CreateWizard() {
     const val = validateStep(step, form, permission);
     if (val) { setError(val); return; }
     setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setStep(s => Math.min(steps.length - 1, s + 1));
+  }
+
+  function back() {
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setStep(s => Math.max(0, s - 1));
   }
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -263,20 +277,34 @@ export function CreateWizard() {
         {/* ── Step 0: Child ──────────────────────────────────────────────────── */}
         {step === 0 && (
           <div className="mt-10 grid gap-6">
-            <div className="grid gap-5 md:grid-cols-2">
 
+            {/* Email captured here — first field */}
+            <div className="rounded-2xl border border-honey/50 bg-honey/10 p-4">
+              <Field label="Your email address" type="email" required
+                placeholder="you@example.com"
+                hint="We'll send your finished book here. We never share your email."
+                value={form.email} onChange={v => update("email", v)} />
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
               <Field label="Child's name" required
                 placeholder="Milo"
                 hint="Their real name, nickname, or a fictional name."
                 value={form.charachter_name} onChange={v => update("charachter_name", v)} />
 
-              <SelectField label="Gender" required value={form.gender} onChange={v => update("gender", v)} options={GENDER_OPTIONS} />
+              <div>
+                <SelectField label="Gender" required value={form.gender} onChange={v => update("gender", v)} options={GENDER_OPTIONS} />
+                {form.gender === "Other" && (
+                  <Field label="Describe" required placeholder="They/them, prefers no label…"
+                    value={form.gender_custom} onChange={v => update("gender_custom", v)} className="mt-3" />
+                )}
+              </div>
 
               <SelectField label="Age" required value={form.age} onChange={v => update("age", v)} options={AGE_OPTIONS} />
 
               <Field label="What does this child look like?" required textarea
                 placeholder="Curly brown hair, bright green eyes, freckles, usually wearing a yellow raincoat and muddy boots."
-                hint="Describe their appearance — hair, eyes, skin tone, outfit, anything distinctive."
+                hint="Hair, eyes, skin tone, outfit, anything distinctive."
                 value={form.charachter_desc} onChange={v => update("charachter_desc", v)} />
 
               <Field label="About this child" required textarea
@@ -288,7 +316,7 @@ export function CreateWizard() {
             {/* Supporting characters */}
             <div>
               <p className="mb-1 text-sm font-bold">Supporting characters <span className="font-normal text-ink/50">(optional)</span></p>
-              <p className="mb-4 text-xs text-ink/50">People, animals, or creatures who appear in the story alongside {form.charachter_name || "the main character"}.</p>
+              <p className="mb-4 text-xs text-ink/50">People, animals, or creatures who appear alongside {form.charachter_name || "the main character"}.</p>
               <div className="grid gap-4">
                 {supportingChars.map((ch, i) => (
                   <div key={i} className="rounded-2xl border border-line bg-cream p-4">
@@ -322,10 +350,17 @@ export function CreateWizard() {
           <div className="mt-10 grid gap-6">
             <div className="grid gap-5 md:grid-cols-2">
 
-              <SelectField label="Narrative structure" required
-                value={form.structure} onChange={v => update("structure", v)}
-                options={STRUCTURE_OPTIONS}
-                hint="This shapes the story's arc. Linear 3-act works for most — change it only if you have a specific need." />
+              <div>
+                <SelectField label="Narrative structure" required
+                  value={form.structure} onChange={v => update("structure", v)}
+                  options={STRUCTURE_OPTIONS}
+                  hint="Linear 3-act works for most — change it only if you have a specific vision." />
+                {form.structure === "Other" && (
+                  <Field label="Describe the structure" required
+                    placeholder="A mystery that unravels backward from the ending…"
+                    value={form.structure_custom} onChange={v => update("structure_custom", v)} className="mt-3" />
+                )}
+              </div>
 
               <Field label="Main challenge" required textarea
                 placeholder="Milo wants to explore the woods but is afraid to go too far alone."
@@ -340,13 +375,11 @@ export function CreateWizard() {
                 {form.moral === "Other" && (
                   <Field label="Write your own moral" required
                     placeholder="Small brave steps can lead to big adventures."
-                    value={form.moral_custom} onChange={v => update("moral_custom", v)}
-                    className="mt-3" />
+                    value={form.moral_custom} onChange={v => update("moral_custom", v)} className="mt-3" />
                 )}
               </div>
             </div>
 
-            {/* Struggles */}
             <div>
               <p className="mb-1 text-sm font-bold">Real-world struggles this story speaks to <span className="font-normal text-ink/50">(optional)</span></p>
               <p className="mb-4 text-xs text-ink/50">These emotional parallels help the story land the way it needs to. Select all that apply.</p>
@@ -365,8 +398,7 @@ export function CreateWizard() {
               {form.relevant_struggles.includes("Other") && (
                 <Field label="Describe the specific struggle" required
                   placeholder="Adjusting to a new sibling…"
-                  value={form.struggles_other} onChange={v => update("struggles_other", v)}
-                  className="mt-3" />
+                  value={form.struggles_other} onChange={v => update("struggles_other", v)} className="mt-3" />
               )}
             </div>
           </div>
@@ -383,8 +415,7 @@ export function CreateWizard() {
                 {form.world_setting === "Other" && (
                   <Field label="Describe the setting" required
                     placeholder="A quiet woodland behind the family's cottage."
-                    value={form.world_setting_custom} onChange={v => update("world_setting_custom", v)}
-                    className="mt-3" />
+                    value={form.world_setting_custom} onChange={v => update("world_setting_custom", v)} className="mt-3" />
                 )}
               </div>
 
@@ -395,13 +426,11 @@ export function CreateWizard() {
                 {form.time_era === "Other" && (
                   <Field label="Describe the era" required
                     placeholder="Far-future city with flying boats…"
-                    value={form.time_era_custom} onChange={v => update("time_era_custom", v)}
-                    className="mt-3" />
+                    value={form.time_era_custom} onChange={v => update("time_era_custom", v)} className="mt-3" />
                 )}
               </div>
             </div>
 
-            {/* World themes */}
             <div>
               <p className="mb-1 text-sm font-bold">World themes</p>
               <p className="mb-4 text-xs text-ink/50">Choose all that feel right — these shape the emotional tone.</p>
@@ -419,26 +448,35 @@ export function CreateWizard() {
               </div>
             </div>
 
-            {/* Illustration style */}
             <div>
               <p className="mb-1 text-sm font-bold">Illustration style</p>
               <p className="mb-4 text-xs text-ink/50">Applied consistently across all 20 illustrations in your book.</p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {STYLE_OPTIONS.map(style => (
-                  <button key={style} type="button" onClick={() => update("artistic_style", style)}
-                    className={`rounded-2xl border p-4 text-left transition ${
-                      form.artistic_style === style
-                        ? "border-honey bg-honey/20 shadow-button"
-                        : "border-line bg-cream hover:border-honey/50"
-                    }`}>
-                    <span className="block h-12 rounded-xl bg-gradient-to-br from-honey/60 via-card to-sage/50" />
-                    <span className="mt-3 block text-sm font-bold leading-snug">{style}</span>
-                    {form.artistic_style === style && (
-                      <span className="mt-1 block text-xs font-bold text-honey">Selected ✓</span>
-                    )}
-                  </button>
-                ))}
+                {STYLE_OPTIONS.map(style => {
+                  const isOther    = style === "Other — describe your own";
+                  const isSelected = form.artistic_style === style;
+                  return (
+                    <button key={style} type="button" onClick={() => update("artistic_style", style)}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        isSelected
+                          ? "border-honey bg-honey/20 shadow-button"
+                          : "border-line bg-cream hover:border-honey/50"
+                      }`}>
+                      {!isOther && <span className="block h-12 rounded-xl bg-gradient-to-br from-honey/60 via-card to-sage/50" />}
+                      {isOther  && <span className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-line text-2xl">✏️</span>}
+                      <span className="mt-3 block text-sm font-bold leading-snug">{style}</span>
+                      {isOther && <span className="mt-1 block text-xs font-normal text-ink/45">Vintage Soviet children&apos;s book, cut-paper collage, woodblock print…</span>}
+                      {isSelected && !isOther && <span className="mt-1 block text-xs font-bold text-honey">Selected ✓</span>}
+                    </button>
+                  );
+                })}
               </div>
+              {form.artistic_style === "Other — describe your own" && (
+                <Field label="Describe the illustration style" required className="mt-4"
+                  placeholder="Vintage Soviet children's book illustration: bold flat shapes, limited 4-color palette, strong graphic compositions."
+                  hint="Be as specific as you like. This description will be applied consistently to all 20 illustrations."
+                  value={form.artistic_style_custom} onChange={v => update("artistic_style_custom", v)} textarea />
+              )}
             </div>
           </div>
         )}
@@ -476,18 +514,19 @@ export function CreateWizard() {
         {/* ── Step 4: Review ─────────────────────────────────────────────────── */}
         {step === 4 && (
           <div className="mt-10 grid gap-6">
-            <Field label="Your email address" type="email" required
-              placeholder="you@example.com"
-              hint="Where we send your confirmation and finished PDF."
-              value={form.email} onChange={v => update("email", v)} />
+            <div className="rounded-2xl border border-honey/30 bg-honey/10 p-4 text-sm font-bold text-ink/70">
+              Sending to: <span className="text-ink">{form.email}</span>
+            </div>
 
             <div className="rounded-2xl border border-line bg-cream p-5">
               <h2 className="display text-2xl font-bold">Review your book details</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {buildReviewRows(form, buildSupportingChars(), buildWorldSetting(), buildTimeEra(), buildMoral()).map(([label, value]) => (
+                {buildReviewRows(form, buildSupportingChars(), buildWorldSetting(), buildTimeEra(), buildMoral(), buildStructure()).map(([label, value]) => (
                   <div key={label} className="rounded-xl bg-card p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-ink/45">{label}</p>
-                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-ink/76">{value || <span className="italic text-ink/30">Not provided</span>}</p>
+                    <p className="mt-2 whitespace-pre-line text-sm leading-6 text-ink/76">
+                      {value || <span className="italic text-ink/30">Not provided</span>}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -517,7 +556,7 @@ export function CreateWizard() {
 
         {/* Navigation */}
         <div className="mt-10 flex flex-wrap justify-between gap-4">
-          <button type="button" onClick={() => setStep(s => Math.max(0, s - 1))}
+          <button type="button" onClick={back}
             disabled={step === 0 || submitting}
             className="inline-flex min-h-12 items-center gap-2 rounded-full border border-line bg-card px-5 py-3 text-sm font-bold disabled:opacity-40">
             <ArrowLeft className="h-4 w-4" />
@@ -548,19 +587,16 @@ export function CreateWizard() {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function buildReviewRows(
-  form: FormState,
-  supportingChars: string,
-  worldSetting: string,
-  timeEra: string,
-  moral: string
+  form: FormState, supportingChars: string,
+  worldSetting: string, timeEra: string, moral: string, structure: string,
 ): [string, string][] {
   return [
     ["Child", `${form.charachter_name}${form.age ? `, age ${form.age}` : ""}`],
-    ["Gender", form.gender],
+    ["Gender", form.gender === "Other" ? form.gender_custom : form.gender],
     ["Appearance", form.charachter_desc],
     ["About them", form.charachter_bio],
     ["Supporting characters", supportingChars],
-    ["Story structure", form.structure],
+    ["Story structure", structure],
     ["Challenge", form.problem],
     ["Moral / lesson", moral],
     ["Real-world struggles", form.relevant_struggles.filter(s => s !== "Other").concat(
@@ -569,7 +605,7 @@ function buildReviewRows(
     ["Setting", worldSetting],
     ["Time period", timeEra],
     ["World themes", form.world_theme.join(", ")],
-    ["Illustration style", form.artistic_style],
+    ["Illustration style", form.artistic_style === "Other — describe your own" ? form.artistic_style_custom : form.artistic_style],
     ["Custom title", form.book_title],
     ["Dedication", form.dedication],
     ["Opening note", form.opening_note],
@@ -579,35 +615,38 @@ function buildReviewRows(
 
 function validateStep(step: number, form: FormState, permission: boolean): string {
   if (step === 0) {
+    if (!form.email.trim())           return "Please enter your email address.";
     if (!form.charachter_name.trim()) return "Please enter the child's name.";
     if (!form.gender)                 return "Please select a gender option.";
+    if (form.gender === "Other" && !form.gender_custom.trim()) return "Please describe the gender.";
     if (!form.age)                    return "Please select an age.";
     if (!form.charachter_desc.trim()) return "Please describe what the child looks like.";
     if (!form.charachter_bio.trim())  return "Please tell us a bit about the child.";
   }
   if (step === 1) {
-    if (!form.structure)               return "Please choose a narrative structure.";
-    if (!form.problem.trim())          return "Please describe the main challenge.";
-    if (!form.moral)                   return "Please choose a moral or lesson.";
+    if (!form.structure)              return "Please choose a narrative structure.";
+    if (form.structure === "Other" && !form.structure_custom.trim()) return "Please describe the structure.";
+    if (!form.problem.trim())         return "Please describe the main challenge.";
+    if (!form.moral)                  return "Please choose a moral or lesson.";
     if (form.moral === "Other" && !form.moral_custom.trim()) return "Please write your own moral.";
   }
   if (step === 2) {
-    if (!form.world_setting)           return "Please choose a setting.";
+    if (!form.world_setting)          return "Please choose a setting.";
     if (form.world_setting === "Other" && !form.world_setting_custom.trim()) return "Please describe the setting.";
-    if (!form.time_era)                return "Please choose a time period.";
+    if (!form.time_era)               return "Please choose a time period.";
     if (form.time_era === "Other" && !form.time_era_custom.trim()) return "Please describe the time period.";
     if (form.world_theme.length === 0) return "Please choose at least one world theme.";
-    if (!form.artistic_style)          return "Please choose an illustration style.";
+    if (!form.artistic_style)         return "Please choose an illustration style.";
+    if (form.artistic_style === "Other — describe your own" && !form.artistic_style_custom.trim())
+      return "Please describe your custom illustration style.";
   }
   if (step === 4) {
-    if (!form.email.trim())            return "Please enter your email address.";
-    const s0 = validateStep(0, form, permission);
-    if (s0) return s0;
-    const s1 = validateStep(1, form, permission);
-    if (s1) return s1;
-    const s2 = validateStep(2, form, permission);
-    if (s2) return s2;
-    if (!permission)                   return "Please confirm you have permission to create this book.";
+    // re-validate all steps
+    for (const s of [0, 1, 2]) {
+      const v = validateStep(s, form, permission);
+      if (v) return v;
+    }
+    if (!permission) return "Please confirm you have permission to create this book.";
   }
   return "";
 }

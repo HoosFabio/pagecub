@@ -4,4 +4,5 @@ out
 dist
 .env*.local
 .vercel
+.netlify/
 *.log

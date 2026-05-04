@@ -24,27 +24,28 @@ const stages = [
 const TERMINAL = ["done", "failed"];
 
 export function StatusClient({ token }: { token: string }) {
-  const [data, setData]   = useState<StatusResponse>({});
-  const [error, setError] = useState("");
+  const [data, setData]         = useState<StatusResponse>({});
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(true); // true until first successful fetch
 
   useEffect(() => {
     let alive = true;
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     async function load() {
       try {
         const res     = await fetch(`/api/pagecub/status/${token}`, { cache: "no-store" });
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(payload?.message || "We could not load this book status.");
-        if (alive) { setData(payload); setError(""); }
-        // Stop polling once terminal
-        if (TERMINAL.includes(payload?.status)) interval && clearInterval(interval);
+        if (alive) { setData(payload); setError(""); setLoading(false); }
+        if (TERMINAL.includes(payload?.status) && interval) clearInterval(interval);
       } catch (caught) {
-        if (alive) setError(caught instanceof Error ? caught.message : "Could not load status.");
+        if (alive) { setError(caught instanceof Error ? caught.message : "Could not load status."); setLoading(false); }
       }
     }
 
     load();
-    let interval: ReturnType<typeof setInterval> | null = setInterval(load, 5000);
+    interval = setInterval(load, 5000);
     return () => {
       alive = false;
       if (interval) clearInterval(interval);
@@ -63,7 +64,31 @@ export function StatusClient({ token }: { token: string }) {
     return 0;
   }, [data.stage, isDone]);
 
-  // ── Failed state ────────────────────────────────────────────────────────────
+  // ── Loading skeleton ──────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-4xl rounded-[2rem] border border-line bg-card p-6 shadow-soft md:p-10 animate-pulse">
+        <div className="flex items-start justify-between gap-5">
+          <div className="flex-1 space-y-3">
+            <div className="h-4 w-32 rounded-full bg-cream" />
+            <div className="h-10 w-64 rounded-2xl bg-cream" />
+            <div className="h-4 w-80 rounded-full bg-cream" />
+          </div>
+          <div className="h-16 w-16 shrink-0 rounded-2xl bg-cream" />
+        </div>
+        <div className="mt-10 grid gap-4">
+          {stages.map((_, i) => (
+            <div key={i} className="flex items-center gap-4 rounded-2xl border border-line bg-cream p-4">
+              <div className="h-10 w-10 shrink-0 rounded-full bg-card" />
+              <div className="h-4 w-48 rounded-full bg-card" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // ── Failed state ──────────────────────────────────────────────────────────
   if (isFailed) {
     return (
       <section className="mx-auto max-w-4xl rounded-[2rem] border border-red-200 bg-card p-6 shadow-soft md:p-10">
@@ -78,15 +103,13 @@ export function StatusClient({ token }: { token: string }) {
               A technical error occurred during book generation. You have not been charged — your payment will be refunded automatically within 5–10 business days.
             </p>
             <p className="mt-3 text-sm text-ink/50">
-              If you have questions, email us at{" "}
+              Questions? Email us at{" "}
               <a href="mailto:lumen@inksynth.org" className="font-bold text-ink/70 underline">lumen@inksynth.org</a>{" "}
               with the reference: <span className="font-mono text-xs">{token}</span>
             </p>
             <div className="mt-8">
-              <Link
-                href="/create"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-honey px-6 py-3 text-sm font-bold text-ink shadow-button"
-              >
+              <Link href="/create"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-honey px-6 py-3 text-sm font-bold text-ink shadow-button">
                 Try again
               </Link>
             </div>
@@ -149,12 +172,8 @@ export function StatusClient({ token }: { token: string }) {
 
       {isDone && data.downloadUrl && (
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={data.downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-honey px-6 py-3 text-sm font-bold text-ink shadow-button"
-          >
+          <Link href={data.downloadUrl} target="_blank" rel="noopener noreferrer"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-honey px-6 py-3 text-sm font-bold text-ink shadow-button">
             <Download className="h-4 w-4" aria-hidden="true" />
             Download your book
           </Link>
@@ -163,7 +182,7 @@ export function StatusClient({ token }: { token: string }) {
 
       {!isDone && (
         <p className="mt-8 text-center text-xs text-ink/40">
-          This page updates automatically every few seconds. You can close it — the download link will arrive by email.
+          This page updates automatically every few seconds. You can close it — the download link will arrive by email when the book is ready.
         </p>
       )}
     </section>
