@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-export const maxDuration = 26; // Safety net — gives us 26s instead of default 10s
+export const maxDuration = 26;
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -33,7 +33,7 @@ export async function POST(
     return NextResponse.json({ ok: false, note: "sf_run not found" });
   }
 
-  // Idempotency guard
+  // Already advanced past foundation stage (MindStudio retry arrived late)
   if (sfRun.status !== "foundation_pending") {
     console.log("[storyforge/foundation] already processed:", sfRunId, "status:", sfRun.status);
     return NextResponse.json({ ok: true, note: "already processed" });
@@ -41,7 +41,7 @@ export async function POST(
 
   // MindStudio explicit failure
   if (body.success === false) {
-    console.error("[storyforge/foundation] MindStudio success:false for sfRun:", sfRunId);
+    console.error("[storyforge/foundation] MindStudio success:false:", sfRunId);
     await admin.from("sf_runs").update({ status: "failed" }).eq("id", sfRunId);
     await refundCredits(admin, sfRun.tool_run_id, sfRun.user_id);
     return NextResponse.json({ ok: false, note: "foundation failed" });
@@ -69,42 +69,50 @@ export async function POST(
   const chapter_count = 10;
 
   if (!charachter_bible || !visual_bible || !chapter_outline || !story) {
-    console.error(
-      "[storyforge/foundation] missing required fields. Keys received:",
-      Object.keys(result)
-    );
+    console.error("[storyforge/foundation] missing required fields. Keys received:", Object.keys(result));
     await admin.from("sf_runs").update({ status: "failed" }).eq("id", sfRunId);
     await refundCredits(admin, sfRun.tool_run_id, sfRun.user_id);
     return NextResponse.json({ ok: false, note: "incomplete foundation" });
   }
 
-  // Store foundation data and advance status
-  const { error: updateError } = await admin.from("sf_runs").update({
-    status:          "chapters_processing",
-    book_title,
-    charachter_bible,
-    visual_bible,
-    chapter_outline,
-    story,
-    cast_registry,
-    chapter_count,
-    chapters_done:   0,
-    chapters:        {},
-  }).eq("id", sfRunId);
+  // ── ATOMIC idempotency: conditional UPDATE is the real lock ──────────────────
+  // MindStudio retries callbacks if our response is slow. Two concurrent requests
+  // can both pass the status check above before either updates the DB.
+  // Adding .eq("status","foundation_pending") to the UPDATE makes it atomic at
+  // the PostgreSQL level — only ONE concurrent UPDATE wins that WHERE clause.
+  // The loser gets 0 rows in `claimed` and returns early, never triggering the watchdog.
+  const { data: claimed, error: updateError } = await admin
+    .from("sf_runs")
+    .update({
+      status:          "chapters_processing",
+      book_title,
+      charachter_bible,
+      visual_bible,
+      chapter_outline,
+      story,
+      cast_registry,
+      chapter_count,
+      chapters_done:   0,
+      chapters:        {},
+    })
+    .eq("id", sfRunId)
+    .eq("status", "foundation_pending") // ← the atomic lock
+    .select("id");
 
   if (updateError) {
     console.error("[storyforge/foundation] sf_run update failed:", updateError.message);
     return NextResponse.json({ ok: false, note: "db update failed" });
   }
 
-  console.log(`[storyforge/foundation] foundation stored — sfRunId: ${sfRunId}, triggering chapter dispatch`);
+  if (!claimed || claimed.length === 0) {
+    // Another concurrent callback already won — bail out without triggering watchdog
+    console.log("[storyforge/foundation] lost atomic race — another callback already claimed sfRunId:", sfRunId);
+    return NextResponse.json({ ok: true, note: "already claimed by concurrent request" });
+  }
 
-  // ── Trigger chapter dispatch via background function ──────────────────────────
-  // IMPORTANT: We do NOT dispatch chapters inline here — doing 10 MindStudio calls
-  // with 300ms stagger (3+ seconds) inside this callback risks Netlify's function
-  // timeout. Instead we hand off to the watchdog background function which has a
-  // 15-minute execution window. The watchdog handles both initial dispatch and
-  // self-healing retries.
+  console.log(`[storyforge/foundation] claimed — sfRunId: ${sfRunId}, triggering chapter dispatch`);
+
+  // Fire-and-forget: watchdog handles chapter dispatch (has 15-min timeout, no inline race)
   fetch(`${APP_URL}/.netlify/functions/storyforge-chapter-watchdog-background`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
