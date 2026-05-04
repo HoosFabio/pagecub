@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const maxDuration = 26;
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const APP_URL      = process.env.APP_URL || "https://pagecub.com";
+const SUPABASE_URL             = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_KEY             = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const MINDSTUDIO_API_KEY       = process.env.MINDSTUDIO_API_KEY!;
+const STORYFORGE_CHAPTER_AGENT_ID = process.env.STORYFORGE_CHAPTER_AGENT_ID!;
+const APP_URL                  = process.env.APP_URL || "https://pagecub.com";
 
 export async function POST(
   req: NextRequest,
@@ -33,7 +35,7 @@ export async function POST(
     return NextResponse.json({ ok: false, note: "sf_run not found" });
   }
 
-  // Already advanced past foundation stage (MindStudio retry arrived late)
+  // Idempotency guard
   if (sfRun.status !== "foundation_pending") {
     console.log("[storyforge/foundation] already processed:", sfRunId, "status:", sfRun.status);
     return NextResponse.json({ ok: true, note: "already processed" });
@@ -41,9 +43,8 @@ export async function POST(
 
   // MindStudio explicit failure
   if (body.success === false) {
-    console.error("[storyforge/foundation] MindStudio success:false:", sfRunId);
+    console.error("[storyforge/foundation] MindStudio success:false for sfRun:", sfRunId);
     await admin.from("sf_runs").update({ status: "failed" }).eq("id", sfRunId);
-    await refundCredits(admin, sfRun.tool_run_id, sfRun.user_id);
     return NextResponse.json({ ok: false, note: "foundation failed" });
   }
 
@@ -71,16 +72,14 @@ export async function POST(
   if (!charachter_bible || !visual_bible || !chapter_outline || !story) {
     console.error("[storyforge/foundation] missing required fields. Keys received:", Object.keys(result));
     await admin.from("sf_runs").update({ status: "failed" }).eq("id", sfRunId);
-    await refundCredits(admin, sfRun.tool_run_id, sfRun.user_id);
     return NextResponse.json({ ok: false, note: "incomplete foundation" });
   }
 
-  // ── ATOMIC idempotency: conditional UPDATE is the real lock ──────────────────
-  // MindStudio retries callbacks if our response is slow. Two concurrent requests
-  // can both pass the status check above before either updates the DB.
-  // Adding .eq("status","foundation_pending") to the UPDATE makes it atomic at
-  // the PostgreSQL level — only ONE concurrent UPDATE wins that WHERE clause.
-  // The loser gets 0 rows in `claimed` and returns early, never triggering the watchdog.
+  // ── Atomic idempotency: conditional UPDATE prevents double-dispatch on MindStudio retry ──
+  // If MindStudio retries this callback before the first request updates the DB,
+  // both would pass the status check above. The .eq("status","foundation_pending")
+  // on the UPDATE makes it atomic — only one concurrent request wins the DB lock.
+  // The loser gets claimed=[] and returns without dispatching any chapter agents.
   const { data: claimed, error: updateError } = await admin
     .from("sf_runs")
     .update({
@@ -96,7 +95,7 @@ export async function POST(
       chapters:        {},
     })
     .eq("id", sfRunId)
-    .eq("status", "foundation_pending") // ← the atomic lock
+    .eq("status", "foundation_pending")
     .select("id");
 
   if (updateError) {
@@ -105,49 +104,73 @@ export async function POST(
   }
 
   if (!claimed || claimed.length === 0) {
-    // Another concurrent callback already won — bail out without triggering watchdog
-    console.log("[storyforge/foundation] lost atomic race — another callback already claimed sfRunId:", sfRunId);
+    console.log("[storyforge/foundation] lost atomic race — another request already claimed:", sfRunId);
     return NextResponse.json({ ok: true, note: "already claimed by concurrent request" });
   }
 
-  console.log(`[storyforge/foundation] claimed — sfRunId: ${sfRunId}, triggering chapter dispatch`);
+  console.log(`[storyforge/foundation] stored — sfRunId: ${sfRunId}, dispatching ${chapter_count} chapters inline`);
 
-  // Fire-and-forget: watchdog handles chapter dispatch (has 15-min timeout, no inline race)
+  // ── Dispatch all chapter agents inline (same as inksynth) ────────────────────
+  // MindStudio /apps/run returns immediately; chapters POST results to their
+  // callback URLs when done. This is fast (just 10 HTTP calls with 300ms stagger).
+  const ip    = (sfRun.input_payload ?? {}) as Record<string, unknown>;
+  const toStr = (v: unknown) => Array.isArray(v) ? (v as string[]).join(", ") : String(v ?? "");
+
+  const chapterDispatch = Array.from({ length: chapter_count }, (_, i) => i + 1).map(async (chapterNum) => {
+    await new Promise(resolve => setTimeout(resolve, (chapterNum - 1) * 300));
+    try {
+      const callbackUrl = `${APP_URL}/api/pagecub/callback/chapter/${sfRunId}/${chapterNum}`;
+      const msRes = await fetch("https://v1.mindstudio-api.com/developer/v2/apps/run", {
+        method:  "POST",
+        headers: { Authorization: `Bearer ${MINDSTUDIO_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appId:    STORYFORGE_CHAPTER_AGENT_ID,
+          workflow: "Main",
+          callbackUrl,
+          variables: {
+            chapter_num:            String(chapterNum),
+            charachter_bible_clean: charachter_bible,
+            visual_bible_clean:     visual_bible,
+            story_clean:            story,
+            chapter_outline_clean:  chapter_outline,
+            cast_registry_clean:    cast_registry,
+            charachter_name:        String(ip.charachter_name        ?? ""),
+            gender:                 String(ip.gender                 ?? ""),
+            age:                    String(ip.age                    ?? ""),
+            charachter_bio:         String(ip.charachter_bio         ?? ""),
+            charachter_desc:        String(ip.charachter_desc        ?? ""),
+            supporting_charachters: String(ip.supporting_charachters ?? ""),
+            world_setting:          String(ip.world_setting          ?? ""),
+            world_theme:            toStr(ip.world_theme),
+            artistic_style:         String(ip.artistic_style         ?? ""),
+            time_era:               String(ip.time_era               ?? ""),
+            structure:              String(ip.structure              ?? "Linear 3-act plot"),
+            problem:                String(ip.problem                ?? ""),
+            moral:                  String(ip.moral                  ?? ""),
+            relevant_struggles:     toStr(ip.relevant_struggles),
+          },
+        }),
+      });
+      if (!msRes.ok) {
+        const detail = await msRes.text().catch(() => "(unreadable)");
+        console.error(`[storyforge/foundation] chapter ${chapterNum} dispatch failed: ${msRes.status} — ${detail.slice(0, 100)}`);
+      } else {
+        const msData = await msRes.json().catch(() => ({}));
+        console.log(`[storyforge/foundation] chapter ${chapterNum} dispatched — callbackInProgress: ${msData.callbackInProgress}`);
+      }
+    } catch (err) {
+      console.error(`[storyforge/foundation] chapter ${chapterNum} dispatch error:`, err);
+    }
+  });
+
+  await Promise.all(chapterDispatch);
+
+  // Trigger watchdog — sleeps 12 min, then retries any truly missing chapters
   fetch(`${APP_URL}/.netlify/functions/storyforge-chapter-watchdog-background`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sfRunId, immediate: true }),
-  }).catch(err =>
-    console.error("[storyforge/foundation] watchdog trigger failed:", err)
-  );
+    body: JSON.stringify({ sfRunId }),
+  }).catch(err => console.error("[storyforge/foundation] watchdog trigger failed:", err));
 
   return NextResponse.json({ ok: true });
-}
-
-async function refundCredits(admin: ReturnType<typeof createClient<any>>, toolRunId: string, userId: string) {
-  if (!toolRunId || !userId) return;
-  try {
-    const { data: toolRun } = await admin
-      .from("tool_runs")
-      .select("credits_charged")
-      .eq("id", toolRunId)
-      .single();
-
-    if (!toolRun?.credits_charged) return;
-
-    const { data: billing } = await admin
-      .from("billing_customers")
-      .select("credit_balance")
-      .eq("user_id", userId)
-      .single();
-
-    if (billing) {
-      await admin
-        .from("billing_customers")
-        .update({ credit_balance: billing.credit_balance + toolRun.credits_charged })
-        .eq("user_id", userId);
-    }
-  } catch (err) {
-    console.error("[storyforge/foundation] refund error:", err);
-  }
 }

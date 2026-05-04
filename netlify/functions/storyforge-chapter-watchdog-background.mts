@@ -1,32 +1,31 @@
 /**
  * storyforge-chapter-watchdog-background
  *
- * Two modes:
- *   immediate: true  — Triggered by the foundation callback immediately after storing data.
- *                      Dispatches ALL 10 chapter agents right away, then monitors for stragglers.
- *   immediate: false — Legacy: sleeps 12 min then checks for missing chapters.
+ * Triggered by the foundation callback after dispatching all chapter agents.
+ * Sleeps 12 minutes, then checks which chapters are still missing and retries them.
+ * Runs up to MAX_WATCHDOG_PASSES times with RETRY_INTERVAL_MS between each pass.
  *
- * Runs as a Netlify background function (up to 15 min).
+ * This is RECOVERY ONLY — it does not do initial dispatch. Chapters are dispatched
+ * inline in the Foundation callback (same as inksynth). The watchdog only fires
+ * for chapters that genuinely failed to call back after 12+ minutes.
+ *
+ * POST body: { sfRunId: string }
  */
 
 const SUPABASE_URL         = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = (process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!;
-const MINDSTUDIO_API_KEY   = process.env.MINDSTUDIO_API_KEY!;
-const CHAPTER_AGENT_ID     = process.env.STORYFORGE_CHAPTER_AGENT_ID!;
 const APP_URL              = process.env.APP_URL || "https://pagecub.com";
 const RETRY_SECRET         = process.env.STORYFORGE_RETRY_SECRET || "storyforge-retry-2026";
 
-const SLEEP_BEFORE_FIRST_CHECK_MS = 12 * 60 * 1000; // 12 min (legacy mode)
-const RETRY_INTERVAL_MS           =  3 * 60 * 1000; // 3 min between recovery passes
-const MAX_WATCHDOG_PASSES         = 3;
+const SLEEP_BEFORE_FIRST_CHECK_MS = 12 * 60 * 1000; // 12 min — chapters take 3-7 min; well clear by then
+const RETRY_INTERVAL_MS           =  3 * 60 * 1000; // 3 min between retry passes
+const MAX_WATCHDOG_PASSES         = 3;               // 12 + 3 + 3 = 18 min total window
 
 export default async (req: Request) => {
   let sfRunId: string;
-  let immediate = false;
   try {
     const body = await req.json();
-    sfRunId   = body.sfRunId;
-    immediate = !!body.immediate;
+    sfRunId = body.sfRunId;
   } catch {
     console.error("[watchdog] invalid json body");
     return new Response("bad request", { status: 400 });
@@ -37,61 +36,14 @@ export default async (req: Request) => {
     return new Response("missing sfRunId", { status: 400 });
   }
 
-  console.log(`[watchdog] started for sfRunId: ${sfRunId} immediate=${immediate}`);
+  console.log(`[watchdog] started for sfRunId: ${sfRunId}`);
 
-  // ── Immediate mode: dispatch all chapters now ────────────────────────────────
-  if (immediate) {
-    const sfRun = await getSfRun(sfRunId);
-    if (!sfRun) {
-      console.error(`[watchdog] sf_run not found for immediate dispatch: ${sfRunId}`);
-      return new Response("ok");
-    }
-    if (sfRun.status !== "chapters_processing") {
-      console.log(`[watchdog] immediate dispatch skipped — status: ${sfRun.status}`);
-      return new Response("ok");
-    }
+  // Sleep first — chapters are dispatched inline by Foundation callback and
+  // take 3-7 min to complete. 12 min gives them ample time before we intervene.
+  await sleep(SLEEP_BEFORE_FIRST_CHECK_MS);
 
-    const chapterCount = sfRun.chapter_count ?? 10;
-    const existing = (sfRun.chapters ?? {}) as Record<string, ChapterEntry>;
-
-    console.log(`[watchdog] immediate dispatch: ${chapterCount} chapters for sfRunId: ${sfRunId}`);
-
-    for (let ch = 1; ch <= chapterCount; ch++) {
-      const entry = existing[String(ch)];
-      if (entry?.text_1 && !entry?.failed) {
-        console.log(`[watchdog] ch${ch}: already done, skipping`);
-        continue;
-      }
-
-      await sleep(ch > 1 ? 350 : 0); // 350ms stagger between dispatches
-
-      try {
-        const res = await fetch(
-          `${APP_URL}/api/pagecub/retry/${sfRunId}/${ch}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ secret: RETRY_SECRET }),
-          }
-        );
-        const data = await res.json().catch(() => ({}));
-        console.log(`[watchdog] immediate ch${ch}: ${JSON.stringify(data)}`);
-      } catch (err) {
-        console.error(`[watchdog] immediate ch${ch} dispatch error:`, err);
-      }
-    }
-
-    console.log(`[watchdog] immediate dispatch complete — now entering monitoring loop`);
-    // Fall through to monitoring loop below (no initial sleep since we just dispatched)
-    await sleep(RETRY_INTERVAL_MS); // wait 3 min, then check for stragglers
-  } else {
-    // Legacy mode: sleep before first check
-    await sleep(SLEEP_BEFORE_FIRST_CHECK_MS);
-  }
-
-  // ── Monitoring loop: check for missing/stuck chapters ───────────────────────
   for (let pass = 1; pass <= MAX_WATCHDOG_PASSES; pass++) {
-    console.log(`[watchdog] monitoring pass ${pass}/${MAX_WATCHDOG_PASSES} — sfRunId: ${sfRunId}`);
+    console.log(`[watchdog] pass ${pass}/${MAX_WATCHDOG_PASSES} — checking sfRunId: ${sfRunId}`);
 
     const sfRun = await getSfRun(sfRunId);
     if (!sfRun) {
@@ -99,19 +51,22 @@ export default async (req: Request) => {
       return new Response("ok");
     }
 
+    // Run already moved past chapter stage — nothing to do
     if (sfRun.status !== "chapters_processing") {
-      console.log(`[watchdog] status=${sfRun.status} — run has advanced, exiting`);
+      console.log(`[watchdog] sfRun status=${sfRun.status} — no action needed`);
       return new Response("ok");
     }
 
-    const chapters = (sfRun.chapters ?? {}) as Record<string, ChapterEntry>;
+    const chapters    = (sfRun.chapters ?? {}) as Record<string, ChapterEntry>;
     const chapterCount = sfRun.chapter_count ?? 10;
 
+    // Only retry chapters that are completely missing or stuck in retrying state.
+    // Do NOT retry chapters with no text_1 yet — they may still be in flight.
     const missing = Array.from({ length: chapterCount }, (_, i) => String(i + 1))
       .filter(n => {
         const ch = chapters[n];
-        if (!ch) return true;
-        if (ch.retrying) return true;
+        if (!ch) return true;         // completely absent
+        if (ch.retrying) return true; // stuck in retry marker
         return false;
       });
 
@@ -120,7 +75,7 @@ export default async (req: Request) => {
       return new Response("ok");
     }
 
-    console.log(`[watchdog] pass ${pass}: missing/stuck chapters: ${missing.join(", ")}`);
+    console.log(`[watchdog] pass ${pass}: missing/stuck chapters: ${missing.join(", ")} — retrying`);
 
     for (const chapterNum of missing) {
       try {
@@ -133,9 +88,9 @@ export default async (req: Request) => {
           }
         );
         const data = await res.json().catch(() => ({}));
-        console.log(`[watchdog] retry ch${chapterNum}: ${JSON.stringify(data)}`);
+        console.log(`[watchdog] retried chapter ${chapterNum}: ${JSON.stringify(data)}`);
       } catch (err) {
-        console.error(`[watchdog] error retrying ch${chapterNum}:`, err);
+        console.error(`[watchdog] error retrying chapter ${chapterNum}:`, err);
       }
     }
 
@@ -148,12 +103,19 @@ export default async (req: Request) => {
   return new Response("ok");
 };
 
-function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function getSfRun(sfRunId: string) {
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/sf_runs?id=eq.${sfRunId}&select=id,status,chapter_count,chapters,input_payload,charachter_bible,visual_bible,chapter_outline,story,book_title,cast_registry`,
-    { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
+    `${SUPABASE_URL}/rest/v1/sf_runs?id=eq.${sfRunId}&select=id,status,chapter_count,chapters`,
+    {
+      headers: {
+        apikey:        SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      },
+    }
   );
   const data = await res.json().catch(() => []);
   return data[0] ?? null;
