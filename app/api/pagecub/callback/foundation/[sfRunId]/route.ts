@@ -116,7 +116,7 @@ export async function POST(
   return NextResponse.json({ ok: true });
 }
 
-async function refundCredits(admin: ReturnType<typeof createClient>, toolRunId: string, userId: string) {
+async function refundCredits(admin: ReturnType<typeof createClient<any>>, toolRunId: string, userId: string) {
   if (!toolRunId || !userId) return;
   try {
     const { data: toolRun } = await admin
