@@ -15,6 +15,7 @@ type SupportingChar = {
 type FormState = {
   // Step 0 — Child (email captured here)
   email: string;
+  password: string;
   charachter_name: string;
   gender: string;
   gender_custom: string;
@@ -47,7 +48,7 @@ type FormState = {
 const EMPTY_CHAR: SupportingChar = { name: "", role: "", personality: "", appearance: "" };
 
 const INITIAL_FORM: FormState = {
-  email: "", charachter_name: "", gender: "", gender_custom: "", age: "",
+  email: "", password: "", charachter_name: "", gender: "", gender_custom: "", age: "",
   charachter_bio: "", charachter_desc: "",
   structure: "", structure_custom: "", problem: "", moral: "", moral_custom: "",
   relevant_struggles: [], struggles_other: "",
@@ -199,6 +200,7 @@ export function CreateWizard() {
     try {
       const payload = {
         email:                  form.email,
+        password:               form.password,
         charachter_name:        form.charachter_name,
         gender:                 buildGender(),
         age:                    form.age,
@@ -521,6 +523,11 @@ export function CreateWizard() {
               Sending to: <span className="text-ink">{form.email}</span>
             </div>
 
+            <Field label="Access code" required type="password"
+              placeholder="Enter the access code to start your book"
+              hint="Contact lumen@inksynth.org if you need an access code."
+              value={form.password} onChange={v => update("password", v)} />
+
             <div className="rounded-2xl border border-line bg-cream p-5">
               <h2 className="display text-2xl font-bold">Review your book details</h2>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -536,7 +543,7 @@ export function CreateWizard() {
             </div>
 
             <div className="rounded-2xl border border-line bg-cream p-4 text-sm text-ink/70 leading-relaxed">
-              <p><strong>What you get:</strong> A 48-page personalized illustrated storybook — 10 chapters, 2 text pages + 2 illustrations per chapter (20 illustrations total), plus a title page, dedication, opening note, and closing pages. Delivered as a PDF. Print fulfillment coming soon.</p>
+              <p><strong>What you get:</strong> A 48-page personalized illustrated storybook — 10 chapters, 2 text pages + 2 illustrations per chapter (20 illustrations total), plus a title page, dedication, opening note, and closing pages. Delivered as a PDF.</p>
             </div>
 
             <label className="flex items-start gap-3 rounded-2xl border border-line bg-card p-4 text-sm font-bold cursor-pointer">
@@ -545,10 +552,6 @@ export function CreateWizard() {
                 className="mt-1 h-5 w-5 accent-sage" />
               <span>I am the parent/guardian or have permission to create this book featuring the child described above.</span>
             </label>
-
-            <p className="text-sm text-ink/50 text-center">
-              Clicking &ldquo;Create My Book&rdquo; takes you to secure checkout. Your book generation begins immediately after payment ($20.00).
-            </p>
           </div>
         )}
 
@@ -577,7 +580,7 @@ export function CreateWizard() {
               className="inline-flex min-h-12 items-center gap-2 rounded-full bg-honey px-6 py-3 text-sm font-bold text-ink shadow-button disabled:opacity-60">
               {submitting
                 ? <><Loader2 className="h-4 w-4 animate-spin" /> Going to checkout…</>
-                : <><Check className="h-4 w-4" /> Create My Book — $20</>
+                : <><Check className="h-4 w-4" /> Start Book Generation</>
               }
             </button>
           )}
@@ -649,6 +652,7 @@ function validateStep(step: number, form: FormState, permission: boolean): strin
       const v = validateStep(s, form, permission);
       if (v) return v;
     }
+    if (!form.password.trim()) return "Please enter the access code.";
     if (!permission) return "Please confirm you have permission to create this book.";
   }
   return "";
