@@ -59,7 +59,7 @@ const INITIAL_FORM: FormState = {
 // ─── Option Lists ─────────────────────────────────────────────────────────────
 
 const GENDER_OPTIONS    = ["Boy", "Girl", "Nonbinary", "Unspecified / surprise me", "Other"];
-const AGE_OPTIONS       = ["3","4","5","6","7","8","9","10","11","12"];
+// Age is free-text — supports children, teens, adults (e.g. wedding books)
 const WORLD_THEMES      = ["Wonder","Friendship","Courage","Kindness","Adventure","Mystery","Nature","Family","Magic","Growth","Belonging","Resilience"];
 const STRUGGLE_OPTIONS  = ["Anxiety","Shyness","Starting school","Making friends","Fear of trying new things","Sibling jealousy","Bedtime fears","Grief / change","Big feelings","Confidence","Other"];
 const MORAL_OPTIONS     = ["Be brave","Be kind","Tell the truth","Believe in yourself","Ask for help","Mistakes help us grow","Friendship matters","Patience pays off","Other"];
@@ -300,7 +300,10 @@ export function CreateWizard() {
                 )}
               </div>
 
-              <SelectField label="Age" required value={form.age} onChange={v => update("age", v)} options={AGE_OPTIONS} />
+              <Field label="Age" required
+                placeholder="6"
+                hint="Any age — children, teens, adults. Numbers or words both fine."
+                value={form.age} onChange={v => update("age", v)} />
 
               <Field label="What does this child look like?" required textarea
                 placeholder="Curly brown hair, bright green eyes, freckles, usually wearing a yellow raincoat and muddy boots."
@@ -619,7 +622,7 @@ function validateStep(step: number, form: FormState, permission: boolean): strin
     if (!form.charachter_name.trim()) return "Please enter the child's name.";
     if (!form.gender)                 return "Please select a gender option.";
     if (form.gender === "Other" && !form.gender_custom.trim()) return "Please describe the gender.";
-    if (!form.age)                    return "Please select an age.";
+    if (!form.age.trim())              return "Please enter an age.";
     if (!form.charachter_desc.trim()) return "Please describe what the child looks like.";
     if (!form.charachter_bio.trim())  return "Please tell us a bit about the child.";
   }
