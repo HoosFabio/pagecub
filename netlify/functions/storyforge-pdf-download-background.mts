@@ -223,7 +223,12 @@ type ChapterEntry = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function finalizeToolRun(admin: any, sfRunId: string, toolRunId: string, pdfUrl?: string) {
+async function finalizeToolRun(admin: any, sfRunId: string, toolRunId: string | null | undefined, pdfUrl?: string) {
+  // toolRunId is null for pagecub orders (no credit billing) — skip tool_runs update
+  if (!toolRunId) {
+    console.log(`[storyforge/pdf-bg] no toolRunId — skipping tool_runs finalize for sfRunId: ${sfRunId}`);
+    return;
+  }
   const { data: sfRun } = await admin.from("sf_runs").select("chapters").eq("id", sfRunId).single();
   const out: Record<string, string | number> = {};
   if (pdfUrl) out.pdf_url = pdfUrl;
